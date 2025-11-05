@@ -35,7 +35,7 @@ namespace UserManagementAPI.Controllers
             };
 
             await _repository.CreateUserAsync(user);
-            return Ok();
+            return Ok(new { user });
         }
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] UserCreateDTO dto)
@@ -46,6 +46,18 @@ namespace UserManagementAPI.Controllers
 
             var token = GenerateJwtToken(user);
             return Ok(new { token });
+        }
+
+        [HttpDelete("delete")]
+        public async Task<IActionResult> Delete([FromBody] UserCreateDTO dto)
+        {
+            var user = await _repository.GetUserByEmailAsync(dto.Email);
+
+            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.password))
+                return Unauthorized();
+
+            await _repository.DeleteUserAsync(user);
+            return NoContent();
         }
 
         private string GenerateJwtToken(User user)
